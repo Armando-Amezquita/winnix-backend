@@ -1,3 +1,4 @@
+import { PaginationDto } from './../common/dto/pagination.dto';
 import {
   BadRequestException,
   Injectable,
@@ -31,7 +32,9 @@ export class UserService {
     }
   }
 
-  findAll() {
+  findAll(paginationDto: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto;
+
     return `This action returns all user`;
   }
 
