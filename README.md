@@ -18,3 +18,14 @@ docker-compose up -d
 
 - MongoDb
 - Nest
+
+## HttpAdapter
+
+El `HttpAdapter` es un servicio personalizado que encapsula la lógica para realizar solicitudes HTTP a APIs externas. Proporciona métodos como `get`, `post`, `put`, y `delete` para interactuar con endpoints externos.
+
+### Uso
+
+```typescript
+// Ejemplo de uso en un servicio:
+const data = await httpAdapter.get('https://api.externa.com/endpoint');
+```
