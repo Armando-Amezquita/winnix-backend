@@ -14,8 +14,8 @@ import { EnvConfiguration } from './config/env.config';
     ConfigModule.forRoot({
       load: [EnvConfiguration],
     }),
-    AuthModule,
     MongooseModule.forRoot(process.env.MONGODB),
+    AuthModule,
     UserModule,
     CommonModule,
   ],
@@ -23,7 +23,5 @@ import { EnvConfiguration } from './config/env.config';
   providers: [AppService],
 })
 export class AppModule {
-  constructor() {
-    console.log('proccess.env :>> ', process.env);
-  }
+  constructor() {}
 }

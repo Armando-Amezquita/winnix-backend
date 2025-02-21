@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, UserDocument } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -18,10 +18,9 @@ export class UserService {
     private readonly userModel: Model<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     try {
-      const newUser = await this.userModel.create(createUserDto);
-      return newUser;
+      return await this.userModel.create(createUserDto);
     } catch (error) {
       if (error.code === 11000)
         throw new BadRequestException(
@@ -48,6 +47,13 @@ export class UserService {
     if (!user)
       throw new NotFoundException(`No user found with identifier: "${term}"`);
 
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<UserDocument> {
+    const user: UserDocument | null = await this.userModel
+      .findOne({ email })
+      .exec();
     return user;
   }
 

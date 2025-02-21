@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
+// import * as bcrypt from 'bcrypt';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -15,8 +15,8 @@ export class User {
   @Prop({ index: true, trim: true })
   nickname: string;
 
-  @Prop({ required: true, trim: true })
-  password: string;
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Auth' }] })
+  authMethods: Types.ObjectId[];
 
   //   @Prop({ required: true, trim: true })
   //   idNumber: string;
@@ -44,8 +44,8 @@ export class User {
   //   @Prop({ trim: true })
   //   avatar: string;
 
-  //   @Prop({ required: true, default: true })
-  //   isActive: boolean;
+  @Prop({ required: true, default: true })
+  isActive: boolean;
 
   //   @Prop({ default: 0 })
   //   reputation: number;
@@ -56,22 +56,14 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Middleware para hashear la contraseña antes de guardar el usuario
 UserSchema.pre<UserDocument>('save', async function (next) {
-  if (!this.isModified('password')) return next();
-
-  try {
-    const salt = await bcrypt.genSalt(10); // Genera el salt
-    this.password = await bcrypt.hash(this.password, salt); // Hashea la contraseña
-    next();
-  } catch (error) {
-    next(error);
-  }
+  this.email = this.email.toLowerCase();
+  next();
 });
 
-// Método para comparar contraseñas
-UserSchema.methods.comparePassword = async function (
-  password: string,
-): Promise<boolean> {
-  return bcrypt.compare(password, this.password);
-};
+// // Método para comparar contraseñas
+// UserSchema.methods.comparePassword = async function (
+//   password: string,
+// ): Promise<boolean> {
+//   return bcrypt.compare(password, this.password);
+// };
