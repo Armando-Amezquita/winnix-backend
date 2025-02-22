@@ -1,7 +1,9 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
+
 import { AuthService } from './auth.service';
-import { LoginEmailDto } from './dto/login.dto';
-import { SignUpDto } from './dto/signup.dto';
+import { ValidRoles } from './interfaces';
+import { Auth } from './decorators/auth.decorator';
+import { LoginEmailDto, SignUpDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -14,8 +16,20 @@ export class AuthController {
     return this.authService.loginWithEmail(email, password);
   }
 
+  @Post('refresh-token')
+  @Auth()
+  async checkAuthStatus(@Query('_id') _id: string) {
+    return this.authService.checkAuthStatus(_id);
+  }
+
   @Post('signup')
   async signup(@Body() signupDto: SignUpDto) {
     return this.authService.signup(signupDto);
+  }
+
+  @Get('test')
+  @Auth(ValidRoles.admin)
+  privateRoute() {
+    return { hello: 'world' };
   }
 }

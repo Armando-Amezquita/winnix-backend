@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
+import { ValidRoles } from 'src/auth/interfaces';
 // import * as bcrypt from 'bcrypt';
 
 export type UserDocument = HydratedDocument<User>;
@@ -33,13 +34,11 @@ export class User {
   //   @Prop({ required: true, trim: true })
   //   phoneNumber: string;
 
-  //   @Prop({
-  //     required: true,
-  //     default: 'player',
-  //     type: MongooseSchema.Types.ObjectId,
-  //     ref: 'Role',
-  //   })
-  //   role: MongooseSchema.Types.ObjectId;
+  @Prop({
+    required: true,
+    default: ValidRoles.user,
+  })
+  roles: string[];
 
   //   @Prop({ trim: true })
   //   avatar: string;

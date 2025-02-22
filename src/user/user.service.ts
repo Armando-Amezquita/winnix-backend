@@ -1,4 +1,3 @@
-import { PaginationDto } from './../common/dto/pagination.dto';
 import {
   BadRequestException,
   Injectable,
@@ -7,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
+
+// import { PaginationDto } from './../common/dto/pagination.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+// import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './entities/user.entity';
 
 @Injectable()
@@ -18,7 +19,7 @@ export class UserService {
     private readonly userModel: Model<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<UserDocument> {
+  async createUser(createUserDto: CreateUserDto): Promise<UserDocument> {
     try {
       return await this.userModel.create(createUserDto);
     } catch (error) {
@@ -31,18 +32,18 @@ export class UserService {
     }
   }
 
-  findAll(paginationDto: PaginationDto) {
-    const { limit = 10, offset = 0 } = paginationDto;
+  // findAll(paginationDto: PaginationDto) {
+  //   // const { limit = 10, offset = 0 } = paginationDto;
 
-    return `This action returns all user`;
-  }
+  //   return `This action returns all user`;
+  // }
 
-  async findOne(term: string) {
+  async findOneByTermUser(term: string): Promise<UserDocument> {
     const query = isValidObjectId(term)
       ? { _id: term }
       : { $or: [{ nickname: term }, { email: term }, { name: term }] };
 
-    const user: User = await this.userModel.findOne(query);
+    const user: UserDocument = await this.userModel.findOne(query).exec();
 
     if (!user)
       throw new NotFoundException(`No user found with identifier: "${term}"`);
@@ -55,10 +56,6 @@ export class UserService {
       .findOne({ email })
       .exec();
     return user;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
   }
 
   remove(id: number) {

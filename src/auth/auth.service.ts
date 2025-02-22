@@ -63,7 +63,7 @@ export class AuthService {
     if (existingUser)
       throw new ConflictException('Email is already registered');
 
-    const newUser = await this.userService.create({ email, ...res });
+    const newUser = await this.userService.createUser({ email, ...res });
 
     const auth = new this.authModel({
       user: newUser._id,
@@ -88,6 +88,19 @@ export class AuthService {
       token: this.getJwtToken({
         _id: newUser._id.toString(),
         email: newUser.email,
+      }),
+    };
+  }
+
+  async checkAuthStatus(_id: string) {
+    const user = await this.userService.findOneByTermUser(_id);
+    if (!user) throw new UnauthorizedException('User no found');
+
+    return {
+      ...user.toObject(),
+      token: this.getJwtToken({
+        _id: user._id.toString(),
+        email: user.email,
       }),
     };
   }
