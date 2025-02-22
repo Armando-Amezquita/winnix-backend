@@ -59,10 +59,3 @@ UserSchema.pre<UserDocument>('save', async function (next) {
   this.email = this.email.toLowerCase();
   next();
 });
-
-// // Método para comparar contraseñas
-// UserSchema.methods.comparePassword = async function (
-//   password: string,
-// ): Promise<boolean> {
-//   return bcrypt.compare(password, this.password);
-// };
