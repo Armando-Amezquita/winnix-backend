@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { CommonModule } from './common/common.module';
 import { EnvConfiguration } from './config/env.config';
+import { SocketsModule } from './modules/sockets/sockets.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EnvConfiguration } from './config/env.config';
     AuthModule,
     UserModule,
     CommonModule,
+    SocketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
