@@ -7,6 +7,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Habilitar CORS para cualquier origen
+  app.enableCors({
+    origin: '*', // Permite todas las solicitudes (solo para desarrollo)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,7 +29,7 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-
+  console.log('process.env.PORT :>> ', process.env.PORT);
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
