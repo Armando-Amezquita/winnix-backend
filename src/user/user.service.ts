@@ -9,8 +9,8 @@ import { isValidObjectId, Model } from 'mongoose';
 
 // import { PaginationDto } from './../common/dto/pagination.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-// import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './entities/user.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -23,6 +23,7 @@ export class UserService {
     try {
       return await this.userModel.create(createUserDto);
     } catch (error) {
+      console.log('error :>> ', error);
       if (error.code === 11000)
         throw new BadRequestException(
           `A user with the email "${error.keyValue.email}" already exists. Please use a different email.`,
@@ -58,7 +59,9 @@ export class UserService {
     return user;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async updateUser(userId: string, updateUserDto: UpdateUserDto) {
+    return this.userModel.findByIdAndUpdate(userId, updateUserDto, {
+      new: true,
+    });
   }
 }

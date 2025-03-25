@@ -13,6 +13,7 @@ import { AuthProvider, AuthDocument, Auth } from './entities/auth.entity';
 import { UserService } from '../user/user.service';
 import { SignUpDto } from './dto/signup.dto';
 import { JwtPayload } from './interfaces/jwt.payload.interface';
+import { LoginEmailDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -23,47 +24,49 @@ export class AuthService {
   ) {}
 
   // 🔹 Login con email y contraseña
-  async loginWithEmail(email: string, password: string) {
-    email = email.toLowerCase();
-    const user = await this.userService.findByEmail(email);
-    if (!user)
-      throw new UnauthorizedException(
-        'Invalid credentials. If you forgot your password, you can reset it.',
-      );
+  async loginWithEmail(payload: LoginEmailDto) {
+    try {
+      const { email, password } = payload;
+      const emailMap = email.toLowerCase();
+      const user = await this.userService.findByEmail(emailMap);
+      if (!user)
+        throw new UnauthorizedException(
+          'Invalid credentials. If you forgot your password, you can reset it.',
+        );
 
-    const auth = await this.authModel.findOne({
-      user: user?._id,
-      provider: AuthProvider.EMAIL,
-    });
+      const auth = await this.authModel.findOne({
+        user: user?._id,
+        provider: AuthProvider.EMAIL,
+      });
 
-    if (!auth || !auth.passwordHash)
-      throw new UnauthorizedException(
-        'Invalid authentication method. Please try a different login method.',
-      );
+      if (!auth || !auth.passwordHash)
+        throw new UnauthorizedException(
+          'Invalid authentication method. Please try a different login method.',
+        );
 
-    const isMatch = await bcrypt.compare(password, auth.passwordHash);
-    if (!isMatch)
-      throw new UnauthorizedException(
-        'Invalid credentials. If you forgot your password, you can reset it.',
-      );
+      const isMatch = await bcrypt.compare(password, auth.passwordHash);
+      if (!isMatch)
+        throw new UnauthorizedException(
+          'Invalid credentials. If you forgot your password, you can reset it.',
+        );
 
-    return {
-      ...user.toObject(),
-      token: this.getJwtToken({
-        _id: user._id.toString(),
-        email: user.email,
-      }),
-    };
+      const payloadToken = this.mapDataByToken(user);
+      return {
+        token: payloadToken,
+      };
+    } catch (error) {
+      console.log('error :>> ', error);
+    }
   }
 
   async signup(signupDto: SignUpDto) {
-    const { email, password, ...res } = signupDto;
+    const { email, password, username } = signupDto;
     const existingUser = await this.userService.findByEmail(email);
 
     if (existingUser)
       throw new ConflictException('Email is already registered');
 
-    const newUser = await this.userService.createUser({ email, ...res });
+    const newUser = await this.userService.createUser({ email, username });
 
     const auth = new this.authModel({
       user: newUser._id,
@@ -83,12 +86,9 @@ export class AuthService {
     newUser.authMethods.push(auth._id);
     await newUser.save();
 
+    const payloadToken = this.mapDataByToken(newUser);
     return {
-      ...newUser.toObject(),
-      token: this.getJwtToken({
-        _id: newUser._id.toString(),
-        email: newUser.email,
-      }),
+      token: payloadToken,
     };
   }
 
@@ -96,17 +96,25 @@ export class AuthService {
     const user = await this.userService.findOneByTermUser(_id);
     if (!user) throw new UnauthorizedException('User no found');
 
+    const payloadToken = this.mapDataByToken(user);
+
     return {
-      ...user.toObject(),
-      token: this.getJwtToken({
-        _id: user._id.toString(),
-        email: user.email,
-      }),
+      token: this.getJwtToken(payloadToken),
     };
   }
 
   private getJwtToken(payload: JwtPayload) {
     const token = this.jwtService.sign(payload);
     return token;
+  }
+
+  private mapDataByToken(user: any): JwtPayload {
+    return {
+      _id: user._id.toString(),
+      email: user.email,
+      isActive: user.isActive,
+      roles: user.roles,
+      username: user.username,
+    };
   }
 }

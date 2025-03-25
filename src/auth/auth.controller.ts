@@ -12,8 +12,7 @@ export class AuthController {
   // Login with email and password
   @Post('login-email')
   async loginWithEmail(@Body() loginDto: LoginEmailDto) {
-    const { email, password } = loginDto;
-    return this.authService.loginWithEmail(email, password);
+    return this.authService.loginWithEmail(loginDto);
   }
 
   @Post('refresh-token')

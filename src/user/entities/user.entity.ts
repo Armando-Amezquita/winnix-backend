@@ -8,7 +8,7 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, trim: true })
-  name: string;
+  username: string;
 
   @Prop({ required: true, unique: true, index: true, trim: true })
   email: string;
@@ -18,6 +18,19 @@ export class User {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Auth' }] })
   authMethods: Types.ObjectId[];
+
+  @Prop({
+    type: {
+      accepted: { type: Boolean, required: true, default: true },
+      date: { type: Date, required: true, default: Date.now },
+      version: { type: String, required: true, default: 'v1.0' },
+    },
+  })
+  terms: {
+    accepted: boolean;
+    date: Date;
+    version: string;
+  };
 
   //   @Prop({ required: true, trim: true })
   //   idNumber: string;
