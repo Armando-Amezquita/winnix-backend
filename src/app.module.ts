@@ -8,6 +8,9 @@ import { UserModule } from './user/user.module';
 import { CommonModule } from './common/common.module';
 import { EnvConfiguration } from './config/env.config';
 import { SocketsModule } from './modules/sockets/sockets.module';
+import { RolesModule } from './roles/roles.module';
+import { RolePermissionsModule } from './role-permissions/role-permissions.module';
+import { AccountSettingsModule } from './account-settings/account-settings.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { SocketsModule } from './modules/sockets/sockets.module';
     UserModule,
     CommonModule,
     SocketsModule,
+    RolesModule,
+    AccountSettingsModule,
+    RolePermissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

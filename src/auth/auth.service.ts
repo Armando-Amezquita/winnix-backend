@@ -52,7 +52,7 @@ export class AuthService {
 
       const payloadToken = this.mapDataByToken(user);
       return {
-        token: payloadToken,
+        token: this.getJwtToken(payloadToken),
       };
     } catch (error) {
       console.log('error :>> ', error);
@@ -88,7 +88,7 @@ export class AuthService {
 
     const payloadToken = this.mapDataByToken(newUser);
     return {
-      token: payloadToken,
+      token: this.getJwtToken(payloadToken),
     };
   }
 
