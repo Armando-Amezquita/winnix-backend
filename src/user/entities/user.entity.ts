@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
-// import * as bcrypt from 'bcrypt';
+import { HydratedDocument, Query, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -64,3 +63,30 @@ UserSchema.pre<UserDocument>('save', async function (next) {
   this.email = this.email.toLowerCase();
   next();
 });
+
+// --- Middleware Helper ---
+const excludeDeletedMiddleware = function (this: Query<any, any>, next) {
+  if (this.getOptions().withDeleted !== true) {
+    this.where({ deletedAt: null });
+  }
+  next();
+};
+
+// --- Aplicar Middleware ---
+UserSchema.pre('find', excludeDeletedMiddleware);
+UserSchema.pre('findOne', excludeDeletedMiddleware);
+UserSchema.pre('countDocuments', excludeDeletedMiddleware);
+UserSchema.pre('findOneAndDelete', excludeDeletedMiddleware);
+UserSchema.pre('findOneAndUpdate', excludeDeletedMiddleware);
+UserSchema.pre('updateOne', excludeDeletedMiddleware);
+UserSchema.pre('updateMany', excludeDeletedMiddleware);
+
+// --- Aplicar Índice Único Parcial ---
+UserSchema.index(
+  { email: 1 }, // Campo que debe ser único
+  {
+    unique: true,
+    // Solo único si no está borrado
+    partialFilterExpression: { deletedAt: null },
+  },
+);
