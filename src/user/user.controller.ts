@@ -1,24 +1,21 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  // Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-// import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import {
+  createPaginatedSuccessResponse,
+  createSuccessResponse,
+} from 'src/common/helpers/responses/response-helper';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const response = await this.userService.createUser(createUserDto);
+    return createSuccessResponse(response, 'Register user successful');
   }
 
   @Put(':id')
@@ -26,10 +23,11 @@ export class UserController {
     return this.userService.updateUser(id, updateUserDto);
   }
 
-  // @Get()
-  // findAll(@Query() paginationDto: PaginationDto) {
-  //   return this.userService.findAll(paginationDto);
-  // }
+  @Get()
+  async findAll(@Query() paginationDto: PaginationDto) {
+    const response = await this.userService.findAllUsers(paginationDto);
+    return createPaginatedSuccessResponse(response);
+  }
 
   @Get(':term')
   findOneUser(@Param('term') term: string) {

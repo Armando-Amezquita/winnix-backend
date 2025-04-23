@@ -3,15 +3,6 @@ import { HydratedDocument, Query, SchemaTypes, Types } from 'mongoose';
 
 export type RolePermissionDocument = HydratedDocument<RolePermission>;
 
-// --- Middleware Helper ---
-const excludeDeletedMiddleware = function (this: Query<any, any>, next) {
-  // Añade el filtro { deletedAt: null } a menos que se especifique { withDeleted: true }
-  if (this.getOptions().withDeleted !== true) {
-    this.where({ deletedAt: null });
-  }
-  next();
-};
-
 @Schema({ timestamps: true })
 export class RolePermission {
   @Prop({ required: true, trim: true })
@@ -34,7 +25,13 @@ export class RolePermission {
 export const RolePermissionSchema =
   SchemaFactory.createForClass(RolePermission);
 
-// --- Aplicar Middleware ---
+const excludeDeletedMiddleware = function (this: Query<any, any>, next) {
+  if (this.getOptions().withDeleted !== true) {
+    this.where({ deletedAt: null });
+  }
+  next();
+};
+
 RolePermissionSchema.pre('find', excludeDeletedMiddleware);
 RolePermissionSchema.pre('findOne', excludeDeletedMiddleware);
 RolePermissionSchema.pre('countDocuments', excludeDeletedMiddleware);
@@ -43,12 +40,10 @@ RolePermissionSchema.pre('findOneAndUpdate', excludeDeletedMiddleware);
 RolePermissionSchema.pre('updateOne', excludeDeletedMiddleware);
 RolePermissionSchema.pre('updateMany', excludeDeletedMiddleware);
 
-// --- Aplicar Índice Único Parcial ---
 RolePermissionSchema.index(
-  { name: 1 }, // Campo que debe ser único
+  { name: 1 },
   {
     unique: true,
-    // Solo único si no está borrado
     partialFilterExpression: { deletedAt: null },
   },
 );

@@ -1,43 +1,54 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model } from 'mongoose';
+import {
+  FilterQuery,
+  isValidObjectId,
+  Model,
+  ProjectionType,
+  QueryOptions,
+} from 'mongoose';
 
-// import { PaginationDto } from './../common/dto/pagination.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserDocument } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { BaseRepository } from 'src/common/database/base-repository';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { IPaginatedResponse } from 'src/common/interfaces/pagination-response.interface';
+import { SequenceService } from 'src/common/services/sequency.service';
 
 @Injectable()
-export class UserService {
+export class UserService extends BaseRepository<UserDocument> {
   constructor(
-    @InjectModel(User.name)
-    private readonly userModel: Model<User>,
-  ) {}
-
-  async createUser(createUserDto: CreateUserDto): Promise<UserDocument> {
-    try {
-      return await this.userModel.create(createUserDto);
-    } catch (error) {
-      console.log('error :>> ', error);
-      if (error.code === 11000)
-        throw new BadRequestException(
-          `A user with the email "${error.keyValue.email}" already exists. Please use a different email.`,
-        );
-
-      throw new InternalServerErrorException(`Can't create user`);
-    }
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly sequenceService: SequenceService,
+  ) {
+    super(userModel);
   }
 
-  // findAll(paginationDto: PaginationDto) {
-  //   // const { limit = 10, offset = 0 } = paginationDto;
+  /**
+   * Crea un nuevo usuario asignando un ID incremental único.
+   */
+  async createUser(createUserDto: CreateUserDto): Promise<UserDocument> {
+    const nextIncrementalId =
+      await this.sequenceService.getNextSequenceValue('userSequence');
 
-  //   return `This action returns all user`;
-  // }
+    const userDataWithId = {
+      ...createUserDto,
+      email: createUserDto.email.toLowerCase(),
+      incremental: nextIncrementalId,
+    };
+
+    return await super.create(userDataWithId);
+  }
+
+  async findAllUsers(
+    paginationDto: PaginationDto,
+    filter: FilterQuery<UserDocument> = {},
+    projection?: ProjectionType<UserDocument> | null,
+    options?: QueryOptions<UserDocument> | null,
+  ): Promise<IPaginatedResponse<Partial<UserDocument>>> {
+    return super.paginate(filter, paginationDto, projection, options);
+  }
 
   async findOneByTermUser(term: string): Promise<UserDocument> {
     const query = isValidObjectId(term)

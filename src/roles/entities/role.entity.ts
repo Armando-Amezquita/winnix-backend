@@ -5,10 +5,10 @@ export type RoleDocument = HydratedDocument<Role>;
 
 @Schema({ timestamps: true })
 export class Role {
-  @Prop({ required: true, unique: true, trim: true })
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
   name: string;
 
-  @Prop({ trim: true })
+  @Prop({ lowercase: true, trim: true })
   label?: string;
 
   @Prop({

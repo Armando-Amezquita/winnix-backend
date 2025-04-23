@@ -1,17 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Query, Types } from 'mongoose';
+import { HydratedDocument, Query, SchemaTypes, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true, trim: true })
+  @Prop({ required: true, lowercase: true, index: true, trim: true })
   username: string;
 
-  @Prop({ required: true, unique: true, index: true, trim: true })
+  @Prop({ required: true, lowercase: true, trim: true })
   email: string;
 
-  @Prop({ index: true, trim: true })
+  @Prop({ index: true, lowercase: true, trim: true })
   nickname: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Auth' }] })
@@ -22,6 +22,14 @@ export class User {
 
   @Prop({ required: true, default: true })
   isActive: boolean;
+
+  @Prop({ required: true, default: true })
+  incremental: number;
+
+  @Prop({ type: Date, default: null, index: true })
+  deletedAt?: Date | null;
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', default: null, index: true })
+  deletedBy?: Types.ObjectId | null;
 
   @Prop({
     type: {
@@ -59,12 +67,6 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-UserSchema.pre<UserDocument>('save', async function (next) {
-  this.email = this.email.toLowerCase();
-  next();
-});
-
-// --- Middleware Helper ---
 const excludeDeletedMiddleware = function (this: Query<any, any>, next) {
   if (this.getOptions().withDeleted !== true) {
     this.where({ deletedAt: null });
@@ -72,7 +74,6 @@ const excludeDeletedMiddleware = function (this: Query<any, any>, next) {
   next();
 };
 
-// --- Aplicar Middleware ---
 UserSchema.pre('find', excludeDeletedMiddleware);
 UserSchema.pre('findOne', excludeDeletedMiddleware);
 UserSchema.pre('countDocuments', excludeDeletedMiddleware);
@@ -81,12 +82,18 @@ UserSchema.pre('findOneAndUpdate', excludeDeletedMiddleware);
 UserSchema.pre('updateOne', excludeDeletedMiddleware);
 UserSchema.pre('updateMany', excludeDeletedMiddleware);
 
-// --- Aplicar Índice Único Parcial ---
 UserSchema.index(
-  { email: 1 }, // Campo que debe ser único
+  { email: 1 },
   {
     unique: true,
-    // Solo único si no está borrado
+    partialFilterExpression: { deletedAt: null },
+  },
+);
+
+UserSchema.index(
+  { incremental: 1 },
+  {
+    unique: true,
     partialFilterExpression: { deletedAt: null },
   },
 );
