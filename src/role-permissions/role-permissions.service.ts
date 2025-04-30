@@ -62,6 +62,26 @@ export class RolePermissionsService extends BaseRepository<RolePermissionDocumen
     return response;
   }
 
+  async findRpByTerms(
+    terms: string[],
+    field: string = 'name',
+    projection?: ProjectionType<RolePermissionDocument> | null,
+    options?: QueryOptions<RolePermissionDocument> | null,
+  ): Promise<RolePermissionDocument[]> {
+    const query = { [field]: { $in: terms } };
+    const permissions = await this.rpModel
+      .find(query, projection, options)
+      .exec();
+
+    if (!permissions || permissions.length === 0) {
+      throw new NotFoundException(
+        `No se encontraron permisos para los términos proporcionados.`,
+      );
+    }
+
+    return permissions;
+  }
+
   async updateRp(id: string, updateRolePermissionDto: UpdateRolePermissionDto) {
     const response = await super.update(id, updateRolePermissionDto);
     if (!response)

@@ -8,15 +8,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 
 import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
+import { UpdateRoleDto, UpdateRolePermissionsDto } from './dto/update-role.dto';
 import { Role, RoleDocument } from './entities/role.entity';
+import { RolePermissionsService } from 'src/role-permissions/role-permissions.service';
 
 @Injectable()
 export class RolesService {
   constructor(
-    @InjectModel(Role.name)
-    private readonly roleModel: Model<Role>,
+    @InjectModel(Role.name) private readonly roleModel: Model<Role>,
+    private readonly rPService: RolePermissionsService,
   ) {}
+
   async createRole(createRoleDto: CreateRoleDto): Promise<RoleDocument> {
     try {
       return await this.roleModel.create(createRoleDto);
@@ -51,6 +53,34 @@ export class RolesService {
       console.log('error updateRole roles:>> ', error);
       throw new InternalServerErrorException(`Can't update roles`);
     }
+  }
+
+  async updatePermissionRole(
+    nameRole: string,
+    nameRP: UpdateRolePermissionsDto,
+  ) {
+    const permissionsFound = await this.rPService.findRpByTerms(
+      nameRP.permissions,
+    );
+
+    if (!permissionsFound || permissionsFound.length === 0) {
+      throw new NotFoundException('No se encontraron permisos válidos.');
+    }
+
+    const permissionIds = permissionsFound.map((perm) => perm._id);
+    const updatedRole = await this.roleModel.findOneAndUpdate(
+      { name: nameRole },
+      { $addToSet: { permissions: { $each: permissionIds } } },
+      { new: true },
+    );
+
+    if (!updatedRole) {
+      throw new NotFoundException(
+        `No permission found with identifier: '${nameRole}'`,
+      );
+    }
+
+    return updatedRole;
   }
 
   async findOneRoleByTerm(term: string): Promise<RoleDocument> {
